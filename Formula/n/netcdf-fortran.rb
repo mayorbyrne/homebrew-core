@@ -4,6 +4,7 @@ class NetcdfFortran < Formula
   url "https://github.com/Unidata/netcdf-fortran/archive/refs/tags/v4.6.1.tar.gz"
   sha256 "40b534e0c81b853081c67ccde095367bd8a5eead2ee883431331674e7aa9509f"
   license "NetCDF"
+  revision 1
 
   bottle do
     sha256 cellar: :any,                 arm64_sequoia:  "d467233b7ec3a1194edfc5387f1216e95987e1b33333f1d39df984a92925e114"
