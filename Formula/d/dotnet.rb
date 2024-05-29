@@ -3,8 +3,8 @@ class Dotnet < Formula
   homepage "https://dotnet.microsoft.com/"
   # Source-build tag announced at https://github.com/dotnet/source-build/discussions
   url "https://github.com/dotnet/dotnet.git",
-      tag:      "v8.0.4",
-      revision: "83659133a1aa2b2d94f9c4ecebfa10d960e27706"
+      tag:      "v8.0.8",
+      revision: "e78e8a64f20e61e1fea4f24afca66ad1dc56285f"
   license "MIT"
 
   bottle do
@@ -36,10 +36,24 @@ class Dotnet < Formula
   # GCC builds have limited support via community.
   fails_with :gcc
 
+  # Backport fix to build with Xcode 16
+  patch do
+    url "https://github.com/dotnet/runtime/commit/562efd6824762dd0c1826cc99e006ad34a7e9e85.patch?full_index=1"
+    sha256 "435002246227064be19db8065b945e94565b59362e75a72ee6d6322a25baa832"
+    directory "src/runtime"
+  end
+
+  # Backport fix to build with Clang 19
+  # Ref: https://github.com/dotnet/runtime/commit/043ae8c50dbe1c7377cf5ad436c5ac1c226aef79
+  patch :DATA
+
   def install
     if OS.mac?
-      # Deparallelize to avoid missing PDBs
+      # Deparallelize to reduce chances of missing PDBs
       ENV.deparallelize
+      # Avoid failing on missing PDBs as unable to build bottle on all runners in current state
+      # Issue ref: https://github.com/dotnet/source-build/issues/4150
+      inreplace "build.proj", /\bFailOnMissingPDBs="true"/, 'FailOnMissingPDBs="false"'
 
       # Disable crossgen2 optimization in ASP.NET Core to work around build failure trying to find tool.
       # Microsoft.AspNetCore.App.Runtime.csproj(445,5): error : Could not find crossgen2 tools/crossgen2
@@ -50,6 +64,7 @@ class Dotnet < Formula
     else
       ENV.append_path "LD_LIBRARY_PATH", Formula["icu4c"].opt_lib
       ENV.append_to_cflags "-I#{Formula["krb5"].opt_include}"
+      ENV.append_to_cflags "-I#{Formula["zlib"].opt_include}"
 
       # Use our libunwind rather than the bundled one.
       inreplace "src/runtime/eng/SourceBuild.props",
@@ -131,3 +146,41 @@ class Dotnet < Formula
                  shell_output("#{bin}/dotnet run --framework #{target_framework} #{testpath}/test.dll a b c")
   end
 end
+
+__END__
+diff --git a/src/runtime/src/coreclr/vm/comreflectioncache.hpp b/src/runtime/src/coreclr/vm/comreflectioncache.hpp
+index 08d173e61648c6ebb98a4d7323b30d40ec351d94..12db55251d80d24e3765a8fbe6e3b2d24a12f767 100644
+--- a/src/runtime/src/coreclr/vm/comreflectioncache.hpp
++++ b/src/runtime/src/coreclr/vm/comreflectioncache.hpp
+@@ -26,6 +26,7 @@ template <class Element, class CacheType, int CacheSize> class ReflectionCache
+
+     void Init();
+
++#ifndef DACCESS_COMPILE
+     BOOL GetFromCache(Element *pElement, CacheType& rv)
+     {
+         CONTRACTL
+@@ -102,6 +103,7 @@ template <class Element, class CacheType, int CacheSize> class ReflectionCache
+         AdjustStamp(TRUE);
+         this->LeaveWrite();
+     }
++#endif // !DACCESS_COMPILE
+
+ private:
+     // Lock must have been taken before calling this.
+@@ -141,6 +143,7 @@ template <class Element, class CacheType, int CacheSize> class ReflectionCache
+         return CacheSize;
+     }
+
++#ifndef DACCESS_COMPILE
+     void AdjustStamp(BOOL hasWriterLock)
+     {
+         CONTRACTL
+@@ -170,6 +173,7 @@ template <class Element, class CacheType, int CacheSize> class ReflectionCache
+         if (!hasWriterLock)
+             this->LeaveWrite();
+     }
++#endif // !DACCESS_COMPILE
+
+     void UpdateHashTable(SIZE_T hash, int slot)
+     {
