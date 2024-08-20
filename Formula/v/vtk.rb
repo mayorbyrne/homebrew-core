@@ -116,6 +116,10 @@ class Vtk < Formula
     # https://github.com/Homebrew/linuxbrew-core/pull/21654#issuecomment-738549701
     args << "-DOpenGL_GL_PREFERENCE=LEGACY"
 
+    # Help vtk find hdf5 1.14.4.x
+    # https://github.com/Homebrew/homebrew-core/pull/170959#issuecomment-2295288143
+    args << "-DHDF5_INCLUDE_DIR=#{Formula["hdf5"].opt_include}"
+
     args << "-DVTK_USE_COCOA:BOOL=ON" if OS.mac?
 
     system "cmake", "-S", ".", "-B", "build", *args, *std_cmake_args
