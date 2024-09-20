@@ -1,10 +1,9 @@
 class Faust < Formula
   desc "Functional programming language for real time signal processing"
   homepage "https://faust.grame.fr"
-  url "https://github.com/grame-cncm/faust/releases/download/2.72.14/faust-2.72.14.tar.gz"
-  sha256 "dcd5aaf263c59d34c385e65c4f4c5b85b0e9435e57cbfd79bb67a01e5780acf0"
+  url "https://github.com/grame-cncm/faust/releases/download/2.75.7/faust-2.75.7.tar.gz"
+  sha256 "89cfed24e0dabfc344fd9ecea746719cc3dd274f1a8ac283da760f59bf009c87"
   license "GPL-2.0-or-later"
-  revision 2
 
   # Upstream creates releases that use a stable tag (e.g., `v1.2.3`) but are
   # labeled as "pre-release" on GitHub before the version is released, so it's
@@ -31,6 +30,11 @@ class Faust < Formula
   fails_with gcc: "5"
 
   def install
+    llvm = deps.find { |dep| dep.name.match?(/^llvm(@\d+)?$/) }
+               .to_formula
+    # Avoid linkage with LLVM `libunwind`.
+    ENV.remove "HOMEBREW_LIBRARY_PATHS", llvm.opt_lib
+
     system "cmake", "-S", "build", "-B", "homebrew_build",
                     "-DC_BACKEND=COMPILER DYNAMIC",
                     "-DCODEBOX_BACKEND=COMPILER DYNAMIC",
