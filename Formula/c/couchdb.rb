@@ -1,12 +1,10 @@
 class Couchdb < Formula
   desc "Apache CouchDB database server"
   homepage "https://couchdb.apache.org/"
-  # TODO: Check if we can use unversioned `erlang` at version bump.
-  url "https://www.apache.org/dyn/closer.lua?path=couchdb/source/3.3.3/apache-couchdb-3.3.3.tar.gz"
-  mirror "https://archive.apache.org/dist/couchdb/source/3.3.3/apache-couchdb-3.3.3.tar.gz"
-  sha256 "7a2007b5f673d4be22a25c9a111d9066919d872ddb9135a7dcec0122299bd39e"
+  url "https://www.apache.org/dyn/closer.lua?path=couchdb/source/3.4.0/apache-couchdb-3.4.0.tar.gz"
+  mirror "https://archive.apache.org/dist/couchdb/source/3.4.0/apache-couchdb-3.4.0.tar.gz"
+  sha256 "a16c300bf3db481cdb7040d5c233a109d471a0328a5caee296b08cc258a6200c"
   license "Apache-2.0"
-  revision 1
 
   bottle do
     sha256 cellar: :any,                 arm64_sequoia:  "a36e27000f29a596cd7b04405626a65b4114a6aacb5e8996d854f6d615064d81"
@@ -19,24 +17,17 @@ class Couchdb < Formula
     sha256 cellar: :any_skip_relocation, x86_64_linux:   "b4a5418e235e9d12abab2ddba6059466bb49bdcaed44cc30ef0c68a5f8322496"
   end
 
-  # Can undeprecate if:
-  # * QuickJS support is added: https://github.com/apache/couchdb/issues/4448
-  # * Spidermonkey 115 support is added
-  #
-  # Issue ref: https://github.com/apache/couchdb/issues/4825
-  deprecate! date: "2024-02-22", because: "uses deprecated `spidermonkey@91`"
-
   depends_on "autoconf" => :build
   depends_on "autoconf-archive" => :build
   depends_on "automake" => :build
-  depends_on "erlang@25" => :build
+  depends_on "erlang" => :build
   depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "icu4c"
   depends_on "openssl@3"
-  # NOTE: Supported `spidermonkey` versions are hardcoded at
-  # https://github.com/apache/couchdb/blob/#{version}/src/couch/rebar.config.script
-  depends_on "spidermonkey@91"
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   conflicts_with "ejabberd", because: "both install `jiffy` lib"
 
@@ -46,24 +37,16 @@ class Couchdb < Formula
   end
 
   def install
-    spidermonkey = Formula["spidermonkey@91"]
-    inreplace "configure", '[ ! -d "/usr/local/include/${SM_HEADERS}" ]',
-                           "[ ! -d \"#{spidermonkey.opt_include}/${SM_HEADERS}\" ]"
-    inreplace "src/couch/rebar.config.script" do |s|
-      s.gsub! "-I/usr/local/include/mozjs", "-I#{spidermonkey.opt_include}/mozjs"
-      s.gsub! "-L/usr/local/lib", "-L#{spidermonkey.opt_lib} -L#{HOMEBREW_PREFIX}/lib"
-    end
-
-    system "./configure", "--spidermonkey-version", spidermonkey.version.major.to_s
+    system "./configure", "--disable-spidermonkey", "--js-engine=quickjs"
     system "make", "release"
     # setting new database dir
     inreplace "rel/couchdb/etc/default.ini", "./data", "#{var}/couchdb/data"
     # remove windows startup script
-    rm_r("rel/couchdb/bin/couchdb.cmd")
+    rm("rel/couchdb/bin/couchdb.cmd")
     # install files
     prefix.install Dir["rel/couchdb/*"]
-    if File.exist?(prefix/"Library/LaunchDaemons/org.apache.couchdb.plist")
-      (prefix/"Library/LaunchDaemons/org.apache.couchdb.plist").delete
+    if (prefix/"Library/LaunchDaemons/org.apache.couchdb.plist").exist?
+      rm(prefix/"Library/LaunchDaemons/org.apache.couchdb.plist")
     end
   end
 
