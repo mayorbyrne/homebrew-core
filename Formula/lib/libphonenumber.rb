@@ -1,10 +1,9 @@
 class Libphonenumber < Formula
   desc "C++ Phone Number library by Google"
   homepage "https://github.com/google/libphonenumber"
-  url "https://github.com/google/libphonenumber/archive/refs/tags/v8.13.45.tar.gz"
-  sha256 "831e73649074979847cbd46c78081a8552bd75cdf65e259b426a3247e532b686"
+  url "https://github.com/google/libphonenumber/archive/refs/tags/v8.13.46.tar.gz"
+  sha256 "542460d54826de4c48a933e17eb92e2aeafc1e9fa93dbcfd4a4864d37a61d569"
   license "Apache-2.0"
-  revision 1
 
   livecheck do
     url :stable
@@ -50,7 +49,7 @@ class Libphonenumber < Formula
       int main() {
         PhoneNumberUtil *phone_util_ = PhoneNumberUtil::GetInstance();
         PhoneNumber test_number;
-        string formatted_number;
+        std::string formatted_number;
         test_number.set_country_code(1);
         test_number.set_national_number(6502530000ULL);
         phone_util_->Format(test_number, PhoneNumberUtil::E164, &formatted_number);
@@ -61,7 +60,9 @@ class Libphonenumber < Formula
         }
       }
     EOS
-    system ENV.cxx, "-std=c++17", "test.cpp", "-L#{lib}", "-lphonenumber", "-o", "test"
+    system ENV.cxx, "-std=c++17", "test.cpp",
+                                "-I#{Formula["protobuf"].opt_include}",
+                                "-L#{lib}", "-lphonenumber", "-o", "test"
     system "./test"
   end
 end
