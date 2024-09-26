@@ -1,8 +1,8 @@
 class Teleport < Formula
   desc "Modern SSH server for teams managing distributed infrastructure"
   homepage "https://goteleport.com/"
-  url "https://github.com/gravitational/teleport/archive/refs/tags/v16.4.0.tar.gz"
-  sha256 "fd8d0fe968bd863e3657e0cdfe7d3a5e90b0663b1efe396802f1880d2a6dde79"
+  url "https://github.com/gravitational/teleport/archive/refs/tags/v16.4.1.tar.gz"
+  sha256 "6bb9a2c62b42e159b1ade7238babc0f431143aeb5e45f8280ac441c5b320c6dd"
   license all_of: ["AGPL-3.0-or-later", "Apache-2.0"]
   head "https://github.com/gravitational/teleport.git", branch: "master"
 
@@ -18,18 +18,21 @@ class Teleport < Formula
   end
 
   bottle do
-    sha256 cellar: :any,                 arm64_sequoia: "655ed41855aadea238493f847ed5ef38031773656a73e703af59b967a6993e0f"
-    sha256 cellar: :any,                 arm64_sonoma:  "7c1a8dfcb8206e79aa19887f46bbd91d8076d380e2a30daa7adc5a04359ec77d"
-    sha256 cellar: :any,                 arm64_ventura: "5138439b1b1930de2b6635ccefc6f274076d566a6e2470efd0bebaa5a053e412"
-    sha256 cellar: :any,                 sonoma:        "2470914809568d757d5e3ed065feaef37571636bfce8b407c39ff996a1fa8aeb"
-    sha256 cellar: :any,                 ventura:       "5f28fc33e1f52fe77279855ef1d14ac8025b08301a910d1ebabf559f9e694bfd"
-    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0390a3014408096fdc6b1dfe66df9376edb4d9af86f053ad2d37276932d34280"
+    sha256 cellar: :any,                 arm64_sequoia: "9ec17161f4fdc9f11ce3f86608f692a64031e278dfabc95d25359f1486e56161"
+    sha256 cellar: :any,                 arm64_sonoma:  "7b583cc49fd01d11e01b12c9228acf6f750af1f720c5e785c07b56549af9948a"
+    sha256 cellar: :any,                 arm64_ventura: "eddb15f21bc11c5db031ac20eb3346b709f493d5a6a06d7a7974af01ffbc2b58"
+    sha256 cellar: :any,                 sonoma:        "4898343bf3001c9cc3724136cb1b82ae53b51d7e12e529059fd2c4b3e9d8b815"
+    sha256 cellar: :any,                 ventura:       "16867c7fb92dcff4aaad446b86bc9c9f4f32a95c65e74c20646c28298cf2e123"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7e1e73fa4867cf955b2e81fcc37971619a6374511cc1cde616a7419fd8d29b0f"
   end
 
   depends_on "corepack" => :build
+  # Use "go" again after https://github.com/gravitational/teleport/commit/e4010172501f0ed18bb260655c83606dfa872fbd
+  # is released, likely in a version 17.x.x (or later?):
   depends_on "go@1.22" => :build
   depends_on "pkg-config" => :build
   depends_on "rust" => :build
+  # TODO: try to remove rustup dependancy, see https://github.com/Homebrew/homebrew-core/pull/191633#discussion_r1774378671
   depends_on "rustup" => :build
   depends_on "wasm-pack" => :build
   depends_on "libfido2"

@@ -1586,6 +1586,7 @@ libtensorflow
 libtiff
 libtirpc
 libtommath
+libtool
 libtrace
 libtrng
 libucl
